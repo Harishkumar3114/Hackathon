@@ -12,14 +12,15 @@ export const evaluateRules = (links, context) => {
           return context.location.country === rule.config.allowedCountry;
         case "time":
           const { startHour, endHour } = rule.config;
+          const current = context.timeHour;
 
-          if (startHour < endHour) {
-            // Normal: 9 AM (9) to 5 PM (17)
-            return context.timeHour >= startHour && context.timeHour < endHour;
+          if (startHour <= endHour) {
+            // Standard: 9 AM to 5 PM
+            return current >= startHour && current < endHour;
           } else {
-            // Wrap-around: 9 PM (21) to 5 AM (5)
-            // It's valid if it's AFTER start OR BEFORE end
-            return context.timeHour >= startHour || context.timeHour < endHour;
+            // Overnight: 10 PM (22) to 5 AM (5)
+            // Logic: Is it after 10 PM OR before 5 AM?
+            return current >= startHour || current < endHour;
           }
         default:
           return true;

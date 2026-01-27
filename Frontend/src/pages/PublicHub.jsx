@@ -1,67 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Box, ThemeProvider, createTheme, CssBaseline, Container, Typography, Button, Avatar, Stack } from '@mui/material';
-import api from '../api/axios';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import api from "../api/axios";
+import "./PublicHub.css";
 
-const spaceTheme = createTheme({
-  palette: { mode: 'dark', background: { default: '#000000' }, primary: { main: '#22c55e' } },
-});
-
-const PublicHub = () => {
+const PublicPage = () => {
   const { slug } = useParams();
   const [hub, setHub] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const loadHub = async () => {
+    const fetchHub = async () => {
       try {
         const res = await api.get(`/hub/${slug}`);
         setHub(res.data);
-      } catch (e) { console.error("Invalid Slug"); }
+      } catch (err) {
+        console.error("❌ Failed to fetch hub:", err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
     };
-    loadHub();
+    fetchHub();
   }, [slug]);
 
-  const trackClick = async (id) => {
-    await api.post(`/track/click/${id}`);
+  const handleLinkClick = async (linkId) => {
+    try {
+      // Fire and forget click tracking
+      api.post(`/track/click/${linkId}`);
+    } catch (err) {
+      console.error("Click tracking failed", err);
+    }
   };
 
-  if (!hub) return <Box sx={{ bgcolor: 'black', h: '100vh' }} />;
+  // 1️⃣ FIRST: Handle Loading state
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="loader">🛰️ Loading Intelligence...</div>
+      </div>
+    );
+  }
 
+  // 2️⃣ SECOND: Handle Error or Null state
+  if (error || !hub) {
+    return (
+      <div className="page-container">
+        <div className="paper">
+          <h1 className="title">404</h1>
+          <p className="description">Hub not found in the Odyssey database.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 3️⃣ THIRD: Now it is safe to render because 'hub' is guaranteed to exist
   return (
-    <ThemeProvider theme={spaceTheme}>
-      <CssBaseline />
-      <Container maxWidth="xs" sx={{ py: 10, textAlign: 'center' }}>
-        <Avatar sx={{ bgcolor: 'primary.main', width: 80, height: 80, mx: 'auto', mb: 3, boxShadow: '0 0 20px #22c55e66' }}>
-          {hub.title[0]}
-        </Avatar>
-        <Typography variant="h4" fontWeight="900" gutterBottom>{hub.title}</Typography>
-        <Typography variant="body2" color="gray" sx={{ mb: 6 }}>{hub.description}</Typography>
+    <div className="page-container">
+      <div className="content-wrapper">
+        <div className="paper">
+          <div className="header">
+            <div className="avatar">{hub.title ? hub.title[0] : "H"}</div>
+            <h1 className="title">{hub.title}</h1>
+            <p className="description">{hub.description}</p>
+          </div>
 
-        <Stack spacing={2.5}>
-          {hub.links.map((link) => (
-            <Button 
-              key={link.id} 
-              href={link.url} 
-              target="_blank" 
-              variant="outlined" 
-              fullWidth
-              onClick={() => trackClick(link.id)}
-              sx={{ 
-                py: 2, borderRadius: 8, borderWeight: 2, fontWeight: 'bold', fontSize: '1rem',
-                '&:hover': { bgcolor: 'primary.main', color: 'black' } 
-              }}
-            >
-              {link.label}
-            </Button>
-          ))}
-        </Stack>
+          <div className="links-container">
+            {hub.links &&
+              hub.links.map((link) => (
+                <a
+                  key={link.id} // Backend sends 'id' in your final res.json
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-button"
+                  onClick={() => handleLinkClick(link.id)}
+                >
+                  <span>{link.label}</span>
+                </a>
+              ))}
+          </div>
 
-        <Typography variant="caption" color="#333" sx={{ mt: 10, display: 'block', letterSpacing: 4 }}>
-          POWERED BY IPD INTELLIGENCE
-        </Typography>
-      </Container>
-    </ThemeProvider>
+          <div className="footer">
+            <p>SMART LINK HUB • 2026</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default PublicHub;
+export default PublicPage;

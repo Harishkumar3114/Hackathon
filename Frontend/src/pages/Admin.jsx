@@ -53,7 +53,7 @@ const spaceTheme = createTheme({
 const Admin = () => {
   const [hubData, setHubData] = useState({ title: "", description: "" });
   const [links, setLinks] = useState([
-    { label: "Test Link", url: "https://google.com", priority: 1, rules: [] },
+    { label: "", url: "", priority: 1, rules: [] },
   ]);
   const [showPopup, setShowPopup] = useState(false);
   const [response, setResponse] = useState(null);

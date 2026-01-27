@@ -67,18 +67,25 @@ const PublicPage = () => {
 
           <div className="links-container">
             {hub.links &&
-              hub.links.map((link) => (
-                <a
-                  key={link.id} // Backend sends 'id' in your final res.json
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link-button"
-                  onClick={() => handleLinkClick(link.id)}
-                >
-                  <span>{link.label}</span>
-                </a>
-              ))}
+              hub.links.map((link) => {
+                // ✅ FIX: Ensure URL starts with http or https
+                const validUrl = link.url.startsWith("http")
+                  ? link.url
+                  : `https://${link.url}`;
+
+                return (
+                  <a
+                    key={link.id}
+                    href={validUrl} // Use the sanitized URL here
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="link-button"
+                    onClick={() => handleLinkClick(link.id)}
+                  >
+                    <span>{link.label}</span>
+                  </a>
+                );
+              })}
           </div>
 
           <div className="footer">
